@@ -1,52 +1,76 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Battleships
 {
     class Program
     {
+        [DllImport("user32.dll")]
+        public static extern bool ShowWindow(IntPtr hWnd, int cmdShow);//For maximizing the window
         public static Random random = new Random();
         static Board myBoard = new Board();
         static Board oppoBoard = new Board();
-        static bool userHit = false, compHit = false;
         static void Main(string[] args)
         {
+            MaximizeWindow();
             Console.Title = "Jonathan's Battleships Game";
             while (!oppoBoard.noMoreShipsFlag && !myBoard.noMoreShipsFlag)
             {
-                myBoard.PrintShipsInfo();
-                Console.WriteLine();
-                oppoBoard.PrintBoard(true);
-                myBoard.PrintBoard();
-                Console.WriteLine();
-                if (!compHit)
-                {
-                    MakeUserMove();
-                    compHit = false;
-                }
-                if (!userHit)
-                {
-                    MakeComputerMove();
-                    userHit = false;
-                }
-                Console.Clear();
+                PrintBoards();
+                MakeUserMove();
+                MakeComputerMove();
             }
+            Console.Clear();
             if (myBoard.noMoreShipsFlag)
-            {
-                Console.BackgroundColor = ConsoleColor.Yellow;
-                Console.ForegroundColor = ConsoleColor.Black;
-                Console.WriteLine("You Won!\n");
-                Console.ResetColor();
-                myBoard.PrintBoard(true);
-            }
+                ShowPlayerWon();
             else
-            {
-                Console.WriteLine("The computer won...\n");
-                Console.WriteLine("Computer's ships locations:\n");
-                myBoard.PrintBoard(true);
-                Console.WriteLine("Game Over!");
-            }
+                ShowComputerWon();
+            Console.WriteLine("Game Over!");
             Console.ReadLine();
+        }
+
+        private static void ShowComputerWon()
+        {
+            Console.BackgroundColor = ConsoleColor.Yellow;
+            Console.ForegroundColor = ConsoleColor.Black;
+            Console.WriteLine("The computer won...\n");
+            Console.ResetColor();
+            Console.WriteLine("Your ships:");
+            oppoBoard.PrintBoard(true);
+            Console.WriteLine("Computer's ships locations:\n");
+            myBoard.PrintBoard(true);
+        }
+
+        private static void ShowPlayerWon()
+        {
+            Console.BackgroundColor = ConsoleColor.Yellow;
+            Console.ForegroundColor = ConsoleColor.Black;
+            Console.WriteLine("You Won!\n");
+            Console.ResetColor();
+            Console.WriteLine("Your ships:");
+            oppoBoard.PrintBoard(true);
+            Console.WriteLine("Computer's ships:");
+            myBoard.PrintBoard(true);
+        }
+
+        private static void PrintBoards()
+        {
+            Console.Clear();
+            myBoard.PrintShipsInfo();
+            Console.WriteLine();
+            Console.WriteLine("Your ships:");
+            oppoBoard.PrintBoard(true);
+            Console.WriteLine("Computer's ships:");
+            myBoard.PrintBoard();
+            Console.WriteLine();
+        }
+
+        private static void MaximizeWindow()
+        {
+            Process p = Process.GetCurrentProcess();
+            ShowWindow(p.MainWindowHandle, 3);
         }
 
         private static void MakeUserMove()
@@ -58,19 +82,24 @@ namespace Battleships
                 x = GetValidNumber(Board.size[1], 'X');
                 y = GetValidNumber(Board.size[0], 'Y');
             }
-            userHit = myBoard.Shoot(x, y);
+            if (myBoard.Shoot(x, y) && !myBoard.noMoreShipsFlag)
+            {
+                PrintBoards();
+                MakeUserMove();
+            }
         }
 
-        private static void MakeComputerMove()
+        private static void MakeComputerMove()//TODO: Make computer's moves smarter...
         {
             int x = -1, y = -1;
             do
             {
-                x = random.Next(Board.size[1]);
-                y = random.Next(Board.size[0]);
-            }
-            while (oppoBoard.isShot[y, x]);
-            compHit = oppoBoard.Shoot(x, y);
+                do
+                {
+                    x = random.Next(Board.size[1]);
+                    y = random.Next(Board.size[0]);
+                } while (oppoBoard.isShot[y, x]);
+            } while (oppoBoard.Shoot(x, y) && !oppoBoard.noMoreShipsFlag);
         }
 
         private static int GetValidNumber(int upTo, char pointName)
@@ -107,7 +136,7 @@ namespace Battleships
         public bool[,] isShip = new bool[Board.size[0], Board.size[1]];
         public static int[] size = { 10, 10 };
         static int[,] shipCountAndSize = { { 1, 4 }, { 2, 3 }, { 3, 2 }, { 4, 1 } };//{ Count, Size }
-        //static int[,] shipCountAndSize = { { 3, 2 } };//{ Count, Size }
+        //static int[,] shipCountAndSize = { { 3, 2 } };
         int destroyedShips = 0;
         public bool[,] isShot = new bool[size[0], size[1]];
         public List<Ship> ships = new List<Ship>();
