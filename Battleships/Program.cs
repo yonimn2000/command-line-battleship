@@ -11,12 +11,12 @@ namespace Battleships
         public static extern bool ShowWindow(IntPtr hWnd, int cmdShow);//For maximizing the window
         public static Random random = new Random();
         static Board myBoard = new Board();
-        static Board oppoBoard = new Board();
+        static Board opponentBoard = new Board();
         static void Main(string[] args)
         {
             MaximizeWindow();
             Console.Title = "Jonathan's Battleships Game";
-            while (!oppoBoard.noMoreShipsFlag && !myBoard.noMoreShipsFlag)
+            while (!opponentBoard.noMoreShipsFlag && !myBoard.noMoreShipsFlag)
             {
                 PrintBoards();
                 MakeUserMove();
@@ -38,7 +38,7 @@ namespace Battleships
             Console.WriteLine("The computer won...\n");
             Console.ResetColor();
             Console.WriteLine("Your ships:");
-            oppoBoard.PrintBoard(true);
+            opponentBoard.PrintBoard(true);
             Console.WriteLine("Computer's ships locations:\n");
             myBoard.PrintBoard(true);
         }
@@ -50,7 +50,7 @@ namespace Battleships
             Console.WriteLine("You Won!\n");
             Console.ResetColor();
             Console.WriteLine("Your ships:");
-            oppoBoard.PrintBoard(true);
+            opponentBoard.PrintBoard(true);
             Console.WriteLine("Computer's ships:");
             myBoard.PrintBoard(true);
         }
@@ -61,7 +61,7 @@ namespace Battleships
             myBoard.PrintShipsInfo();
             Console.WriteLine();
             Console.WriteLine("Your ships:");
-            oppoBoard.PrintBoard(true);
+            opponentBoard.PrintBoard(true);
             Console.WriteLine("Computer's ships:");
             myBoard.PrintBoard();
             Console.WriteLine();
@@ -82,24 +82,111 @@ namespace Battleships
                 x = GetValidNumber(Board.size[1], 'X');
                 y = GetValidNumber(Board.size[0], 'Y');
             }
-            if (myBoard.Shoot(x, y) && !myBoard.noMoreShipsFlag)
+            myBoard.Shoot(x, y);
+            if (!myBoard.noMoreShipsFlag && myBoard.wasShotLastShot)
             {
                 PrintBoards();
                 MakeUserMove();
             }
         }
 
-        private static void MakeComputerMove()//TODO: Make computer's moves smarter...
+        static List<Point> nextPossibleComputerMoves = new List<Point>();
+        private static void MakeComputerMove()
         {
             int x = -1, y = -1;
-            do
+            if (nextPossibleComputerMoves.Count == 0)
             {
                 do
                 {
                     x = random.Next(Board.size[1]);
                     y = random.Next(Board.size[0]);
-                } while (oppoBoard.isShot[y, x]);
-            } while (oppoBoard.Shoot(x, y) && !oppoBoard.noMoreShipsFlag);
+                } while (opponentBoard.isShot[y, x]);
+            }
+            else
+            {
+                int r = random.Next(nextPossibleComputerMoves.Count);
+                x = nextPossibleComputerMoves[r].y; //IDK why x and y are switched...
+                y = nextPossibleComputerMoves[r].x; //At least it works...
+                nextPossibleComputerMoves.RemoveAt(r);
+            }
+            opponentBoard.Shoot(x, y);
+            if (!opponentBoard.noMoreShipsFlag && opponentBoard.wasShotLastShot) //Computer's turn again.
+            {
+                if (!Ship.IsShipDestroyedAtPoint(opponentBoard.ships, x, y))
+                {//Get list of next possible moves
+                    if (opponentBoard.ships[Ship.GetShipAtPoint(opponentBoard.ships, x, y)].destroyedParts == 1)
+                    {
+                        nextPossibleComputerMoves.Clear();
+                        if (opponentBoard.IsValidPointForNextMove(x - 1, y))
+                            nextPossibleComputerMoves.Add(new Point(x - 1, y));
+                        if (opponentBoard.IsValidPointForNextMove(x + 1, y))
+                            nextPossibleComputerMoves.Add(new Point(x + 1, y));
+                        if (opponentBoard.IsValidPointForNextMove(x, y - 1))
+                            nextPossibleComputerMoves.Add(new Point(x, y - 1));
+                        if (opponentBoard.IsValidPointForNextMove(x, y + 1))
+                            nextPossibleComputerMoves.Add(new Point(x, y + 1));
+                    }
+                    if (opponentBoard.ships[Ship.GetShipAtPoint(opponentBoard.ships, x, y)].destroyedParts > 1)
+                    {
+                        nextPossibleComputerMoves.Clear();
+                        if (!opponentBoard.ships[Ship.GetShipAtPoint(opponentBoard.ships, x, y)].isVertical)
+                        {
+                            for (int newX = x + 1; newX < Board.size[1]; newX++) //Check to the right.
+                            {
+                                if (opponentBoard.IsPointShotShip(newX, y))
+                                    continue;
+                                if (!opponentBoard.IsValidPointForNextMove(newX, y))
+                                    break;
+                                if (opponentBoard.IsValidPointForNextMove(newX, y))
+                                {
+                                    nextPossibleComputerMoves.Add(new Point(newX, y));
+                                    break;
+                                }
+                            }
+                            for (int newX = x - 1; newX > 0; newX--) //Check to the left.
+                            {
+                                if (opponentBoard.IsPointShotShip(newX, y))
+                                    continue;
+                                if (!opponentBoard.IsValidPointForNextMove(newX, y))
+                                    break;
+                                if (opponentBoard.IsValidPointForNextMove(newX, y))
+                                {
+                                    nextPossibleComputerMoves.Add(new Point(newX, y));
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            for (int newY = y + 1; newY < Board.size[0]; newY++) //Check to the bottom.
+                            {
+                                if (opponentBoard.IsPointShotShip(x, newY))
+                                    continue;
+                                if (!opponentBoard.IsValidPointForNextMove(x, newY))
+                                    break;
+                                if (opponentBoard.IsValidPointForNextMove(x, newY))
+                                {
+                                    nextPossibleComputerMoves.Add(new Point(x, newY));
+                                    break;
+                                }
+                            }
+                            for (int newY = y - 1; newY > 0; newY--) //Check to the top.
+                            {
+                                if (opponentBoard.IsPointShotShip(x, newY))
+                                    continue;
+                                if (!opponentBoard.IsValidPointForNextMove(x, newY))
+                                    break;
+                                if (opponentBoard.IsValidPointForNextMove(x, newY))
+                                {
+                                    nextPossibleComputerMoves.Add(new Point(x, newY));
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                MakeComputerMove();
+            }
         }
 
         private static int GetValidNumber(int upTo, char pointName)
@@ -133,14 +220,15 @@ namespace Battleships
 
     class Board
     {
-        public bool[,] isShip = new bool[Board.size[0], Board.size[1]];
         public static int[] size = { 10, 10 };
+        public bool[,] isShip = new bool[Board.size[0], Board.size[1]];
         static int[,] shipCountAndSize = { { 1, 4 }, { 2, 3 }, { 3, 2 }, { 4, 1 } };//{ Count, Size }
-        //static int[,] shipCountAndSize = { { 3, 2 } };
+        //static int[,] shipCountAndSize = { { 5, 5 } }; //For debugging.
         int destroyedShips = 0;
         public bool[,] isShot = new bool[size[0], size[1]];
         public List<Ship> ships = new List<Ship>();
         public bool noMoreShipsFlag = false;
+        public bool wasShotLastShot = false;
 
         public Board()
         {
@@ -232,7 +320,7 @@ namespace Battleships
             Console.WriteLine();
         }
 
-        public bool Shoot(int x, int y)
+        public void Shoot(int x, int y)
         {
             isShot[y, x] = true;
             if (isShip[y, x])
@@ -241,15 +329,16 @@ namespace Battleships
                 ships[shipIndex].destroyedParts++;
                 if (ships[shipIndex].destroyedParts == ships[shipIndex].size)
                     DestroyShip(shipIndex);
-                return true;
+                wasShotLastShot = true;
+                return;
             }
-            return false;
+            wasShotLastShot = false;
         }
 
         public void DestroyShip(int shipIndex)
         {
-            int horizontalMultiplier = ships[shipIndex].isHorizontal ? 1 : 0;
-            int verticalMultiplier = ships[shipIndex].isHorizontal ? 0 : 1;
+            int horizontalMultiplier = ships[shipIndex].isVertical ? 1 : 0;
+            int verticalMultiplier = ships[shipIndex].isVertical ? 0 : 1;
             for (int i = ships[shipIndex].initialPoint[1] - 1; i <= ships[shipIndex].initialPoint[1] + 1 * verticalMultiplier + ships[shipIndex].size * horizontalMultiplier; i++)
             {
                 for (int j = ships[shipIndex].initialPoint[0] - 1; j <= ships[shipIndex].initialPoint[0] + 1 * horizontalMultiplier + ships[shipIndex].size * verticalMultiplier; j++)
@@ -266,6 +355,21 @@ namespace Battleships
                 for (int j = 0; j < ships[i].size; j++)
                     isShip[ships[i].points[j].y, ships[i].points[j].x] = true;
         }
+
+        public bool IsValidPointForNextMove(int x, int y)
+        {
+            return (x < size[1] && y < size[0] && x >= 0 && y >= 0 && !isShot[y, x]);
+        }
+
+        public bool IsPointShot(int x, int y)
+        {
+            return (isShot[y, x]);
+        }
+
+        public bool IsPointShotShip(int x, int y)
+        {
+            return (isShot[y, x] && isShip[y, x]);
+        }
     }
 
     class Ship
@@ -273,7 +377,7 @@ namespace Battleships
         public List<Point> points = new List<Point>();
         public int destroyedParts = 0;
         public int[] initialPoint = new int[2];
-        public bool isHorizontal;
+        public bool isVertical;
         public int size;
         public Ship(int newSize, bool[,] isShip)
         {
@@ -286,7 +390,7 @@ namespace Battleships
                 rand = Program.random.Next(2);
                 horizontalMultiplier = rand;
                 verticalMultiplier = 1 - rand;
-                isHorizontal = rand == 1;
+                isVertical = rand == 1;
                 initialPoint[0] = Program.random.Next(Board.size[1] - (size + 1) * verticalMultiplier);
                 initialPoint[1] = Program.random.Next(Board.size[0] - (size + 1) * horizontalMultiplier);
                 isEmpty = true;
@@ -318,9 +422,13 @@ namespace Battleships
             for (int i = 0; i < ships.Count; i++)
                 for (int j = 0; j < ships[i].size; j++)
                     if (ships[i].points[j].x == x && ships[i].points[j].y == y)
-
                         return i;
             return -1;
+        }
+
+        public static bool IsShipDestroyedAtPoint(List<Ship> ships, int x, int y)
+        {
+            return (ships[GetShipAtPoint(ships, x, y)].destroyedParts == ships[GetShipAtPoint(ships, x, y)].size);
         }
     }
 }
