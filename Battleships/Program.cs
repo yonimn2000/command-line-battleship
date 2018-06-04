@@ -15,7 +15,7 @@ namespace Battleships
         static void Main(string[] args)
         {
             MaximizeWindow();
-            Console.Title = "Jonathan's Battleships Game";
+            Console.Title = "Yonatan's Battleships Game";
             while (!opponentBoard.noMoreShipsFlag && !myBoard.noMoreShipsFlag)
             {
                 PrintBoards();
@@ -28,31 +28,38 @@ namespace Battleships
             else
                 ShowComputerWon();
             Console.WriteLine("Game Over!");
-            Console.ReadLine();
+            Console.WriteLine("\nPress any key to exit...");
+            Console.ReadKey();
         }
 
         private static void ShowComputerWon()
         {
-            Console.BackgroundColor = ConsoleColor.Yellow;
-            Console.ForegroundColor = ConsoleColor.Black;
-            Console.WriteLine("The computer won...\n");
-            Console.ResetColor();
             Console.WriteLine("Your ships:");
             opponentBoard.PrintBoard(true);
             Console.WriteLine("Computer's ships locations:\n");
             myBoard.PrintBoard(true);
+            Console.BackgroundColor = ConsoleColor.Yellow;
+            Console.ForegroundColor = ConsoleColor.Black;
+            Console.WriteLine(@" __   _____  _   _   _    ___  ___ _____ " + Environment.NewLine +
+                              @" \ \ / / _ \| | | | | |  / _ \/ __|_   _|" + Environment.NewLine +
+                              @"  \ V / (_) | |_| | | |_| (_) \__ \ | |  " + Environment.NewLine +
+                              @"   |_| \___/ \___/  |____\___/|___/ |_|  " + Environment.NewLine);
+            Console.ResetColor();
         }
 
         private static void ShowPlayerWon()
         {
-            Console.BackgroundColor = ConsoleColor.Yellow;
-            Console.ForegroundColor = ConsoleColor.Black;
-            Console.WriteLine("You Won!\n");
-            Console.ResetColor();
             Console.WriteLine("Your ships:");
             opponentBoard.PrintBoard(true);
             Console.WriteLine("Computer's ships:");
             myBoard.PrintBoard(true);
+            Console.BackgroundColor = ConsoleColor.Yellow;
+            Console.ForegroundColor = ConsoleColor.Black;
+            Console.WriteLine(@" __   _____  _   _  __      _____  _  _ " + Environment.NewLine +
+                              @" \ \ / / _ \| | | | \ \    / / _ \| \| |" + Environment.NewLine +
+                              @"  \ V / (_) | |_| |  \ \/\/ / (_) | .` |" + Environment.NewLine +
+                              @"   |_| \___/ \___/    \_/\_/ \___/|_|\_|" + Environment.NewLine);
+            Console.ResetColor();
         }
 
         private static void PrintBoards()
@@ -223,7 +230,7 @@ namespace Battleships
         public static int[] size = { 10, 10 };
         public bool[,] isShip = new bool[Board.size[0], Board.size[1]];
         static int[,] shipCountAndSize = { { 1, 4 }, { 2, 3 }, { 3, 2 }, { 4, 1 } };//{ Count, Size }
-        //static int[,] shipCountAndSize = { { 5, 5 } }; //For debugging.
+        //static int[,] shipCountAndSize = { { 1, 5 } }; //For debugging.
         int destroyedShips = 0;
         public bool[,] isShot = new bool[size[0], size[1]];
         public List<Ship> ships = new List<Ship>();
