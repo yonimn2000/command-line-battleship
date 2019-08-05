@@ -5,7 +5,7 @@ command-line-battleship
 
 I was bored one day, so I decided to code this game as a challenge.
 
-The biggest challenges for me during coding were:
+The biggest challenges for me during coding:
 
 1.  To randomly position ships of different sizes on the board.
 
