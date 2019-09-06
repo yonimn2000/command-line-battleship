@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace Battleships
+namespace YonatanMankovich.Battleships
 {
     class Program
     {
