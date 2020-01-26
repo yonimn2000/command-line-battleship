@@ -1,20 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace YonatanMankovich.Battleships
 {
     class Program
     {
-        [DllImport("user32.dll")]
-        public static extern bool ShowWindow(IntPtr hWnd, int cmdShow);//For maximizing the window
         public static Random random = new Random();
         static Board myBoard = new Board();
         static Board opponentBoard = new Board();
         static void Main(string[] args)
         {
-            MaximizeWindow();
             Console.Title = "Yonatan's Battleships Game";
             while (!opponentBoard.noMoreShipsFlag && !myBoard.noMoreShipsFlag)
             {
@@ -72,12 +67,6 @@ namespace YonatanMankovich.Battleships
             Console.WriteLine("Computer's ships:");
             myBoard.PrintBoard();
             Console.WriteLine();
-        }
-
-        private static void MaximizeWindow()
-        {
-            Process p = Process.GetCurrentProcess();
-            ShowWindow(p.MainWindowHandle, 3);
         }
 
         private static void MakeUserMove()
